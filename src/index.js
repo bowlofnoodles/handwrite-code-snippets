@@ -53,15 +53,6 @@ const biggest = arr => arr.reduce((c, n) => c <= n ? n : c, arr[0]);
 
 console.log('biggestTest', biggest(biggestTest));
 
-const curryAdd = (...args) => {
-  const addSum = (arr, init) => arr.reduce((c, n) => c + n, init);
-  let sum = addSum(args, 0);
-  const x = (...b) => {if (!b || !b.length) return sum; sum = addSum(b, sum); return x};
-  return x;
-}
-
-console.log('add', curryAdd(1, 2, 3)(2, 2, 3)(3)(4, 2, 20, 1234)(5)(6)(7)(8, 10, 2, 8)(9)(10)());
-
 
 // nums = [2, 7, 11, 15], target = 9
 // [0, 1]
