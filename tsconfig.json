@@ -1,0 +1,4 @@
+{
+  "allowJS": true,
+  "lib": ["ES2015"]
+}
