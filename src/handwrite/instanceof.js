@@ -2,7 +2,7 @@
 const isObject = target => typeof target === 'object' && target !== 'null';
 const isFunction = target => typeof target === 'function';
 function instanceOf(target, origin) {
-  if (!(isObject || isFunction)) return false;
+  if (!(isObject(target) || isFunction(target))) return false;
   if (!target.__proto__) return false;
   while(target.__proto__) {
     const proto = target.__proto__;
