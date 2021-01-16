@@ -1,4 +1,5 @@
 
+// 三数之和
 const findThreeSum = (arr, target) => {
   const result = [];
   const nums = arr.sort((a, b) => a - b);
@@ -27,3 +28,16 @@ const findThreeSum = (arr, target) => {
 }
 
 console.log('findThreeSum', findThreeSum([-1, 0, 1, 2, -1, -4], 0))
+
+// 反转链表
+var reverseList = function (head) {
+  let currentNode = null;
+  let headNode = head;
+  while (head && head.next) {
+    currentNode = head.next;
+    head.next = currentNode.next;
+    currentNode.next = headNode;
+    headNode = currentNode;
+  }
+  return headNode;
+};
