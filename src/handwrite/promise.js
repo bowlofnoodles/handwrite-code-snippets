@@ -1,7 +1,11 @@
+const PENDING = 'pending';
+const FULFILLED = 'fulfilled';
+const REJECTED = 'rejected';
+
 function Promise(executor) {
   var self = this;
 
-  self.status = 'pending';
+  self.status = PENDING;
 
   self.onResolvedCallback = [];
 
@@ -15,8 +19,8 @@ function Promise(executor) {
     setTimeout(function () {
       // 异步执行所有的回调函数
 
-      if (self.status === 'pending') {
-        self.status = 'resolved';
+      if (self.status === PENDING) {
+        self.status = FULFILLED;
 
         self.data = value;
 
@@ -31,8 +35,8 @@ function Promise(executor) {
     setTimeout(function () {
       // 异步执行所有的回调函数
 
-      if (self.status === 'pending') {
-        self.status = 'rejected';
+      if (self.status === PENDING) {
+        self.status = REJECTED;
 
         self.data = reason;
 
@@ -60,7 +64,7 @@ function resolvePromise(promise2, x, resolve, reject) {
   }
 
   if (x instanceof Promise) {
-    if (x.status === 'pending') {
+    if (x.status === PENDING) {
       x.then(function (v) {
         resolvePromise(promise2, v, resolve, reject);
       }, reject);
@@ -127,7 +131,7 @@ Promise.prototype.then = function (onResolved, onRejected) {
           throw r;
         };
 
-  if (self.status === 'resolved') {
+  if (self.status === FULFILLED) {
     return (promise2 = new Promise(function (resolve, reject) {
       setTimeout(function () {
         // 异步执行onResolved
@@ -143,7 +147,7 @@ Promise.prototype.then = function (onResolved, onRejected) {
     }));
   }
 
-  if (self.status === 'rejected') {
+  if (self.status === REJECTED) {
     return (promise2 = new Promise(function (resolve, reject) {
       setTimeout(function () {
         // 异步执行onRejected
@@ -159,7 +163,7 @@ Promise.prototype.then = function (onResolved, onRejected) {
     }));
   }
 
-  if (self.status === 'pending') {
+  if (self.status === PENDING) {
     // 这里之所以没有异步执行，是因为这些函数必然会被resolve或reject调用，而resolve或reject函数里的内容已是异步执行，构造函数里的定义
 
     return (promise2 = new Promise(function (resolve, reject) {
