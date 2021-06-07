@@ -138,6 +138,18 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
   }
 };
 
+MyPromise.resolve = function(value) {
+  return new MyPromise(resolve => {
+    resolve(value);
+  });
+};
+
+MyPromise.reject = function (reason) {
+  return new MyPromise((_, reject) => {
+    reject(reason);
+  });
+};
+
 module.exports = MyPromise;
 
 MyPromise.defer = MyPromise.deferred = function () {
