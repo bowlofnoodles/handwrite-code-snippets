@@ -52,7 +52,7 @@ function Promise(executor) {
   } catch (reason) {
     reject(reason);
   }
-};
+}
 
 function resolvePromise(promise2, x, resolve, reject) {
   var then;
@@ -110,7 +110,7 @@ function resolvePromise(promise2, x, resolve, reject) {
   } else {
     resolve(x);
   }
-};
+}
 
 Promise.prototype.then = function (onResolved, onRejected) {
   var self = this;
@@ -194,7 +194,7 @@ Promise.prototype.catch = function (onRejected) {
   return this.then(null, onRejected);
 };
 
-module.exports = Promise;
+export default Promise;
 
 // 最后这个是测试用的，后面会说
 

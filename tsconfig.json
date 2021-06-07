@@ -1,4 +1,10 @@
 {
   "allowJS": true,
-  "lib": ["ES2015"]
+  "lib": ["ES2015"],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
