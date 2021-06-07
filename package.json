@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "parcel serve -p 1236 index.html --open",
     "start": "npm run dev",
-    "build": "parcel build index.html"
+    "build": "parcel build index.html",
+    "test-promise": "promises-aplus-tests ./src/handwrite/promise.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
     "commitizen": "^4.2.2",
     "cz-conventional-changelog": "^3.3.0",
     "parcel-bundler": "^1.12.4",
+    "promises-aplus-tests": "^2.1.2",
     "typescript": "^3.9.7"
   },
   "dependencies": {
