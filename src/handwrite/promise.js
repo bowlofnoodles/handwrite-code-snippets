@@ -15,7 +15,7 @@ function MyPromise(executor) {
       if (ctx.status === PENDING) {
         ctx.status = FULFILLED;
         ctx.value = value;
-        for (let i = 0; i < ctx.onResolvedCallback.length; i ++) {
+        for (let i = 0; i < ctx.onResolvedCallback.length; i++) {
           ctx.onResolvedCallback[i](ctx.value);
         }
       }
@@ -39,116 +39,111 @@ function MyPromise(executor) {
   } catch (err) {
     reject(err);
   }
-};
+}
 
 function resolvePromise(promise, x, resolve, reject) {
   if (promise === x) return reject(new TypeError('Cycle Chain Detected in promise'));
   if (x instanceof MyPromise) {
     if (x.status === PENDING) {
-      x.then(v => resolvePromise(promise, v, resolve, reject), reject);
+      return x.then(value => {
+        resolvePromise(promise, value, resolve, reject);
+      }, reject)
     } else {
-      x.then(resolve, reject);
+      return x.then(resolve, reject);
     }
-    return;
   }
+
   let thenOrThrowCalled = false;
+
   if ((x !== null && typeof x === 'object') || typeof x === 'function') {
     try {
       let then = x.then;
       if (typeof then === 'function') {
-        then.call(
+        return then.call(
           x,
           function rs(y) {
             if (thenOrThrowCalled) return;
             thenOrThrowCalled = true;
             return resolvePromise(promise, y, resolve, reject);
           },
-          function rj(e) {
+          function rj(r) {
             if (thenOrThrowCalled) return;
             thenOrThrowCalled = true;
-            return reject(e);
+            return reject(r);
           }
-        )
+        );
       } else {
-        resolve(x);
+        return resolve(x);
       }
     } catch (err) {
       if (thenOrThrowCalled) return;
       thenOrThrowCalled = true;
-      reject(err);
+      return reject(err);
     }
   } else {
-    resolve(x);
+    return resolve(x);
   }
 }
 
 MyPromise.prototype.then = function(onFulfilled, onRejected) {
-  const ctx = this;
   onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value;
   onRejected = typeof onRejected === 'function' ? onRejected : reason => {throw reason};
+  const ctx = this;
 
   if (ctx.status === PENDING) {
-    let promise2 = new MyPromise((resolve, reject) => {
+    let promise = new MyPromise((resolve, reject) => {
       ctx.onResolvedCallback.push(value => {
         try {
           let x = onFulfilled(value);
-          resolvePromise(promise2, x, resolve, reject); 
+          resolvePromise(promise, x, resolve, reject);
         } catch (err) {
           reject(err);
         }
       });
+
       ctx.onRejectedCallback.push(reason => {
         try {
           let x = onRejected(reason);
-          resolvePromise(promise2, x, resolve, reject);
+          resolvePromise(promise, x, resolve, reject);
         } catch (err) {
           reject(err);
         }
       });
     });
-    return promise2;
+
+    return promise;
+    
   }
 
   if (ctx.status === FULFILLED) {
-    let promise2 = new MyPromise((resolve, reject) => {
+    let promise = new MyPromise((resolve, reject) => {
       queueMicrotask(() => {
         try {
           let x = onFulfilled(ctx.value);
-          resolvePromise(promise2, x, resolve, reject);
-        } catch (err) {
-          reject(err);
-        }
-      })
-    });
-    return promise2;
-  }
-
-  if (ctx.status === REJECTED) {
-    let promise2 = new MyPromise((resolve, reject) => {
-      queueMicrotask(() => {
-        try {
-          let x = onRejected(ctx.reason);
-          resolvePromise(promise2, x, resolve, reject);
+          resolvePromise(promise, x, resolve, reject);
         } catch (err) {
           reject(err);
         }
       });
     });
-    return promise2;
+    return promise;
+
   }
-};
 
-MyPromise.resolve = function(value) {
-  return new MyPromise(resolve => {
-    resolve(value);
-  });
-};
-
-MyPromise.reject = function (reason) {
-  return new MyPromise((_, reject) => {
-    reject(reason);
-  });
-};
+  if (ctx.status === REJECTED) {
+    let promise = new MyPromise((resolve, reject) => {
+      queueMicrotask(() => {
+        try {
+          let x = onRejected(ctx.reason);
+          resolvePromise(promise, x, resolve, reject);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+    return promise;
+  }
+}
 
 module.exports = MyPromise;
 
