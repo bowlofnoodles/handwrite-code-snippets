@@ -15,7 +15,7 @@ function MyPromise(executor) {
       if (ctx.status === PENDING) {
         ctx.status = FULFILLED;
         ctx.value = value;
-        for (let i = 0; i < ctx.onResolvedCallback.length; i++) {
+        for (let i = 0; i < ctx.onResolvedCallback.length; i ++) {
           ctx.onResolvedCallback[i](ctx.value);
         }
       }
@@ -37,17 +37,15 @@ function MyPromise(executor) {
   try {
     executor(resolve, reject);
   } catch (err) {
-    reject(err);
+    return reject(err);
   }
-}
+};
 
 function resolvePromise(promise, x, resolve, reject) {
   if (promise === x) return reject(new TypeError('Cycle Chain Detected in promise'));
   if (x instanceof MyPromise) {
     if (x.status === PENDING) {
-      return x.then(value => {
-        resolvePromise(promise, value, resolve, reject);
-      }, reject)
+      return x.then(v => resolvePromise(promise, v, resolve, reject), reject);
     } else {
       return x.then(resolve, reject);
     }
@@ -59,12 +57,12 @@ function resolvePromise(promise, x, resolve, reject) {
     try {
       let then = x.then;
       if (typeof then === 'function') {
-        return then.call(
+        then.call(
           x,
-          function rs(y) {
+          function rs(v) {
             if (thenOrThrowCalled) return;
             thenOrThrowCalled = true;
-            return resolvePromise(promise, y, resolve, reject);
+            return resolvePromise(promise, v, resolve, reject);
           },
           function rj(r) {
             if (thenOrThrowCalled) return;
@@ -83,7 +81,7 @@ function resolvePromise(promise, x, resolve, reject) {
   } else {
     return resolve(x);
   }
-}
+};
 
 MyPromise.prototype.then = function(onFulfilled, onRejected) {
   onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value;
@@ -95,24 +93,22 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
       ctx.onResolvedCallback.push(value => {
         try {
           let x = onFulfilled(value);
-          resolvePromise(promise, x, resolve, reject);
+          return resolvePromise(promise, x, resolve, reject);
         } catch (err) {
-          reject(err);
+          return reject(err);
         }
+        
       });
-
       ctx.onRejectedCallback.push(reason => {
         try {
           let x = onRejected(reason);
-          resolvePromise(promise, x, resolve, reject);
+          return resolvePromise(promise, x, resolve, reject);
         } catch (err) {
-          reject(err);
+          return reject(err);
         }
-      });
+      })
     });
-
     return promise;
-    
   }
 
   if (ctx.status === FULFILLED) {
@@ -120,14 +116,13 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
       queueMicrotask(() => {
         try {
           let x = onFulfilled(ctx.value);
-          resolvePromise(promise, x, resolve, reject);
+          return resolvePromise(promise, x, resolve, reject);
         } catch (err) {
-          reject(err);
+          return reject(err);
         }
       });
     });
     return promise;
-
   }
 
   if (ctx.status === REJECTED) {
@@ -135,15 +130,15 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
       queueMicrotask(() => {
         try {
           let x = onRejected(ctx.reason);
-          resolvePromise(promise, x, resolve, reject);
+          return resolvePromise(promise, x, resolve, reject);
         } catch (err) {
-          reject(err);
+          return reject(err);
         }
       });
     });
     return promise;
   }
-}
+};
 
 module.exports = MyPromise;
 
@@ -155,3 +150,4 @@ MyPromise.defer = MyPromise.deferred = function () {
   });
   return dfd;
 };
+
