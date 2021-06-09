@@ -7,7 +7,10 @@
     "dev": "parcel serve -p 1236 index.html --open",
     "start": "npm run dev",
     "build": "parcel build index.html",
-    "test-promise": "promises-aplus-tests ./src/handwrite/promise.js"
+    "test-promise": "promises-aplus-tests ./src/handwrite/promise.js",
+    "test-thunk-gen": "node ./src/generator/thunk.js",
+    "test-promise-gen": "node ./src/generator/promise.js",
+    "test-co": "node ./src/generator/co-test.js"
   },
   "keywords": [],
   "author": "",
@@ -21,8 +24,10 @@
   },
   "dependencies": {
     "axios": "^0.20.0",
+    "co": "^4.6.0",
     "dayjs": "^1.8.34",
-    "ramda": "^0.27.1"
+    "ramda": "^0.27.1",
+    "thunkify": "^2.1.2"
   },
   "config": {
     "commitizen": {
