@@ -11,11 +11,11 @@ function MyPromise(executor) {
   const ctx = this;
 
   function resolve(value) {
-    queueMicrotask(() => {
+    queueMicrotask(function() {
       if (ctx.status === PENDING) {
         ctx.status = FULFILLED;
         ctx.value = value;
-        for (let i = 0; i < ctx.onResolvedCallback.length; i ++) {
+        for (let i = 0; i < ctx.onResolvedCallback.length; i++) {
           ctx.onResolvedCallback[i](ctx.value);
         }
       }
@@ -23,11 +23,11 @@ function MyPromise(executor) {
   }
 
   function reject(reason) {
-    queueMicrotask(() => {
+    queueMicrotask(function() {
       if (ctx.status === PENDING) {
         ctx.status = REJECTED;
         ctx.reason = reason;
-        for (let i = 0; i < ctx.onRejectedCallback.length; i++) {
+        for (let i = 0; i < ctx.onRejectedCallback.length; i ++) {
           ctx.onRejectedCallback[i](ctx.reason);
         }
       }
@@ -37,23 +37,26 @@ function MyPromise(executor) {
   try {
     executor(resolve, reject);
   } catch (err) {
-    return reject(err);
+    reject(err);
   }
-};
+
+}
 
 function resolvePromise(promise, x, resolve, reject) {
   if (promise === x) return reject(new TypeError('Cycle Chain Detected in promise'));
+
   if (x instanceof MyPromise) {
     if (x.status === PENDING) {
-      return x.then(v => resolvePromise(promise, v, resolve, reject), reject);
+      return x.then(function(v) {
+        return resolvePromise(promise, v, resolve, reject)
+      }, reject);
     } else {
       return x.then(resolve, reject);
     }
   }
 
-  let thenOrThrowCalled = false;
-
   if ((x !== null && typeof x === 'object') || typeof x === 'function') {
+    let thenOrThrowCalled = false;
     try {
       let then = x.then;
       if (typeof then === 'function') {
@@ -73,47 +76,48 @@ function resolvePromise(promise, x, resolve, reject) {
       } else {
         return resolve(x);
       }
-    } catch (err) {
+    } catch(err) {
       if (thenOrThrowCalled) return;
       thenOrThrowCalled = true;
       return reject(err);
     }
+    
   } else {
     return resolve(x);
   }
 };
 
+
 MyPromise.prototype.then = function(onFulfilled, onRejected) {
+  const ctx = this;
   onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value;
   onRejected = typeof onRejected === 'function' ? onRejected : reason => {throw reason};
-  const ctx = this;
 
   if (ctx.status === PENDING) {
-    let promise = new MyPromise((resolve, reject) => {
-      ctx.onResolvedCallback.push(value => {
+    let promise = new MyPromise(function(resolve, reject) {
+      ctx.onResolvedCallback.push(function (value) {
         try {
           let x = onFulfilled(value);
           return resolvePromise(promise, x, resolve, reject);
         } catch (err) {
           return reject(err);
         }
-        
       });
-      ctx.onRejectedCallback.push(reason => {
+
+      ctx.onRejectedCallback.push(function (reason) {
         try {
           let x = onRejected(reason);
           return resolvePromise(promise, x, resolve, reject);
         } catch (err) {
           return reject(err);
         }
-      })
+      });
     });
     return promise;
   }
-
   if (ctx.status === FULFILLED) {
-    let promise = new MyPromise((resolve, reject) => {
-      queueMicrotask(() => {
+    let promise = new MyPromise(function(resolve, reject) {
+      queueMicrotask(function() {
         try {
           let x = onFulfilled(ctx.value);
           return resolvePromise(promise, x, resolve, reject);
@@ -124,10 +128,9 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
     });
     return promise;
   }
-
   if (ctx.status === REJECTED) {
-    let promise = new MyPromise((resolve, reject) => {
-      queueMicrotask(() => {
+    let promise = new MyPromise(function (resolve, reject) {
+      queueMicrotask(function () {
         try {
           let x = onRejected(ctx.reason);
           return resolvePromise(promise, x, resolve, reject);
@@ -138,7 +141,7 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
     });
     return promise;
   }
-};
+}
 
 module.exports = MyPromise;
 
@@ -150,4 +153,5 @@ MyPromise.defer = MyPromise.deferred = function () {
   });
   return dfd;
 };
+
 
