@@ -1,5 +1,3 @@
-const { reject } = require('ramda');
-
 const PENDING = 'pending';
 const FULFILLED = 'fulfilled';
 const REJECTED = 'rejected';
@@ -13,11 +11,11 @@ function MyPromise(executor) {
   const ctx = this;
 
   function resolve(value) {
-    queueMicrotask(() => {
+    queueMicrotask(function() {
       if (ctx.status === PENDING) {
         ctx.status = FULFILLED;
         ctx.value = value;
-        for (let i = 0; i < ctx.onResolvedCallback.length; i++) {
+        for (let i = 0; i < ctx.onResolvedCallback.length; i ++) {
           ctx.onResolvedCallback[i](ctx.value);
         }
       }
@@ -25,11 +23,11 @@ function MyPromise(executor) {
   }
 
   function reject(reason) {
-    queueMicrotask(() => {
+    queueMicrotask(function() {
       if (ctx.status === PENDING) {
         ctx.status = REJECTED;
         ctx.reason = reason;
-        for (let i = 0; i < ctx.onRejectedCallback.length; i++) {
+        for (let i = 0; i < ctx.onRejectedCallback.length; i ++) {
           ctx.onRejectedCallback[i](ctx.reason);
         }
       }
@@ -38,13 +36,14 @@ function MyPromise(executor) {
 
   try {
     executor(resolve, reject);
-  } catch(err) {
+  } catch (err) {
     reject(err);
   }
 }
 
 function resolvePromise(promise, x, resolve, reject) {
-  if (promise === x) return reject(new TypeError('Cycle Chain detected in promise'));
+  if (promise === x) return reject(new TypeError('Cycle Chain Detected in Promise'));
+
   if (x instanceof MyPromise) {
     if (x.status === PENDING) {
       return x.then(v => resolvePromise(promise, v, resolve, reject), reject);
@@ -93,44 +92,42 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
         try {
           let x = onFulfilled(value);
           return resolvePromise(promise, x, resolve, reject);
-        } catch (err) {
-          return reject(err);
+        } catch(err) {
+          reject(err);
         }
       });
       ctx.onRejectedCallback.push(reason => {
         try {
           let x = onRejected(reason);
           return resolvePromise(promise, x, resolve, reject);
-        } catch (err) {
-          return reject(err);
+        } catch(err) {
+          reject(err);
         }
       });
     });
     return promise;
   }
-
   if (ctx.status === FULFILLED) {
     let promise = new MyPromise((resolve, reject) => {
       queueMicrotask(() => {
         try {
           let x = onFulfilled(ctx.value);
           return resolvePromise(promise, x, resolve, reject);
-        } catch (err) {
-          return reject(err);
+        } catch(err) {
+          reject(err);
         }
       });
     });
     return promise;
   }
-
   if (ctx.status === REJECTED) {
     let promise = new MyPromise((resolve, reject) => {
       queueMicrotask(() => {
         try {
           let x = onRejected(ctx.reason);
           return resolvePromise(promise, x, resolve, reject);
-        } catch (err) {
-          return reject(err);
+        } catch(err) {
+          reject(err);
         }
       });
     });
