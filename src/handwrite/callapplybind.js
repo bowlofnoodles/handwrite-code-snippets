@@ -2,8 +2,10 @@ import getLog from '../log/index';
 
 const log = getLog('callapplybind');
 Function.prototype.myCall = function(ctx = window, ...args) {
+  // 不传默认指向window
   ctx = ctx || window;
   const fn = Symbol();
+  // 将函数挂载到ctx上然后调用
   ctx[fn] = this;
   const result = ctx[fn](...args);
   delete ctx[fn];
@@ -11,10 +13,12 @@ Function.prototype.myCall = function(ctx = window, ...args) {
 }
 
 Function.prototype.myApply = function(ctx = window, args) {
+  // 不传默认指向window
   ctx = ctx || window;
   const fn = Symbol();
   ctx[fn] = this;
   let result;
+  // 与call类似 区别在于参数是数组形式
   if (Array.isArray(args)) {
     result = ctx[fn](...args);
   } else {
@@ -25,15 +29,17 @@ Function.prototype.myApply = function(ctx = window, args) {
 }
 
 Function.prototype.myBind = function(ctx = window, ...args1) {
+  // 不传默认指向window
   ctx = ctx || window;
   const _this = this;
   return function F(...args2) {
+    // new调用 就直接调用源函数
     if (this instanceof F) {
       return new _this(...args1, ...args2);
     }
     const result = _this.call(...args1, ...args2);
     return result;
-  }
+  };
 }
 
 function test(b, c) {
