@@ -1,8 +1,8 @@
 class Scheduler {
   constructor(num) {
-    this.runCount = 0;
     this.maxCount = num;
     this.queue = [];
+    this.result = [];
   }
   add(promiseCreator) {
     this.queue.push(promiseCreator);
@@ -15,14 +15,12 @@ class Scheduler {
   }
 
   next() {
-    if (!this.queue.length || this.maxCount <= 0 || this.runCount >= this.maxCount) return;
-    this.runCount ++;
-    this.queue.shift()().then(() => {
-      this.runCount --;
+    const p = this.queue.shift();
+    if (!p) return;
+    p().then(() => {
       this.next();
     });
   }
-  // ...
 }
 
 const timeout = time =>
